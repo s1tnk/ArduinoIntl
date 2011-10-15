@@ -45,22 +45,34 @@ def read_po(fp):
 def main():
   import sys
 
+  # Read the current text catalog.
   d = {}
+  firstcomment = ''
   it = read_po(file(sys.argv[1]))
-  (comment, key, value, rkey, rvalue) = it.next()
-  d[key] = rvalue
-  sys.stdout.write(comment)
+  try:
+    (comment, key, value, rkey, rvalue) = it.next()
+    d[key] = rvalue
+    firstcomment = comment		# Preserve the first comment block
+  except StopIteration:
+    pass
   for (comment, key, value, rkey, rvalue) in it:
     d[key] = rvalue
 
-  it = read_po(file(sys.argv[2]))
-  (comment, key, value, rkey, rvalue) = it.next()
-  sys.stdout.write(rkey)
-  sys.stdout.write(d.get(key, rvalue))
+  # Read the new text catalog template and output.
+  # The translated values come from the current text catalog read above.
+  out = file(sys.argv[1], 'w')
+  out.write(firstcomment)
+  it = read_po(sys.stdin)
+  try:
+    (comment, key, value, rkey, rvalue) = it.next()
+    out.write(rkey)
+    out.write(d.get(key, rvalue))
+  except StopIteration:
+    pass
   for (comment, key, value, rkey, rvalue) in it:
-    sys.stdout.write(comment)
-    sys.stdout.write(rkey)
-    sys.stdout.write(d.get(key, rvalue))
+    out.write(comment)
+    out.write(rkey)
+    out.write(d.get(key, rvalue))
 
 if __name__ == '__main__':
   main()
