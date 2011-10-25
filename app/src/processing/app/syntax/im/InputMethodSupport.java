@@ -24,6 +24,7 @@ public class InputMethodSupport implements InputMethodRequests,
     InputMethodListener {
 
   private int committed_count = 0;
+  private boolean gotZenkakuSpace = false;
   private CompositionTextManager textManager;
 
   public InputMethodSupport(JEditTextArea textArea) {
@@ -73,9 +74,18 @@ public class InputMethodSupport implements InputMethodRequests,
   public void inputMethodTextChanged(InputMethodEvent event) {
     AttributedCharacterIterator text = event.getText();
     committed_count = event.getCommittedCharacterCount();
+    if (((AttributedCharacterIterator)text.clone()).last() == '\u3000') {
+        committed_count = 0;
+    	gotZenkakuSpace = true;
+    }
     if(isBeginInputProcess(text, textManager)){
       textManager.beginCompositionText(text, committed_count);
       caretPositionChanged(event);
+      if (gotZenkakuSpace) {
+        textManager.endCompositionText(text, 1);
+        caretPositionChanged(event);
+        gotZenkakuSpace = false;
+      }
       return;
     }
     if (isInputProcess(text)){
